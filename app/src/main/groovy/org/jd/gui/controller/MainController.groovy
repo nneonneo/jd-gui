@@ -5,71 +5,46 @@
 
 package org.jd.gui.controller
 
+import com.googlecode.dex2jar.tools.Dex2jarCmd
 import groovy.swing.SwingBuilder
 import groovy.transform.CompileStatic
 import org.jd.gui.api.API
-import org.jd.gui.api.feature.ContentCopyable
-import org.jd.gui.api.feature.ContentIndexable
-import org.jd.gui.api.feature.ContentSavable
-import org.jd.gui.api.feature.ContentSearchable
-import org.jd.gui.api.feature.FocusedTypeGettable
-import org.jd.gui.api.feature.IndexesChangeListener
-import org.jd.gui.api.feature.LineNumberNavigable
-import org.jd.gui.api.feature.ContentSelectable
-import org.jd.gui.api.feature.PreferencesChangeListener
-import org.jd.gui.api.feature.SourcesSavable
-import org.jd.gui.api.feature.UriGettable
+import org.jd.gui.api.feature.*
 import org.jd.gui.api.model.Container
 import org.jd.gui.api.model.Indexes
+import org.jd.gui.model.configuration.Configuration
 import org.jd.gui.model.history.History
+import org.jd.gui.service.actions.ContextualActionsFactoryService
 import org.jd.gui.service.container.ContainerFactoryService
 import org.jd.gui.service.fileloader.FileLoaderService
 import org.jd.gui.service.indexer.IndexerService
 import org.jd.gui.service.mainpanel.PanelFactoryService
 import org.jd.gui.service.pastehandler.PasteHandlerService
-import org.jd.gui.service.actions.ContextualActionsFactoryService
 import org.jd.gui.service.platform.PlatformService
 import org.jd.gui.service.preferencespanel.PreferencesPanelService
 import org.jd.gui.service.sourcesaver.SourceSaverService
 import org.jd.gui.service.treenode.TreeNodeFactoryService
 import org.jd.gui.service.type.TypeFactoryService
 import org.jd.gui.service.uriloader.UriLoaderService
-import org.jd.gui.spi.ContainerFactory
-import org.jd.gui.spi.FileLoader
-import org.jd.gui.spi.Indexer
-import org.jd.gui.spi.PanelFactory
-import org.jd.gui.spi.SourceSaver
-import org.jd.gui.spi.TreeNodeFactory
-import org.jd.gui.spi.TypeFactory
-import org.jd.gui.spi.UriLoader
+import org.jd.gui.spi.*
 import org.jd.gui.util.net.UriUtil
 import org.jd.gui.util.swing.SwingUtil
-
-import javax.swing.Action
-import javax.swing.Icon
-import javax.swing.JComponent
-import javax.swing.JFileChooser
-import javax.swing.JLayer
-import javax.swing.TransferHandler
-
-import org.jd.gui.model.configuration.Configuration
 import org.jd.gui.view.MainView
 
+import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 import javax.swing.filechooser.FileSystemView
-import java.awt.Desktop
-import java.awt.EventDispatchThread
-import java.awt.Frame
-import java.awt.Point
-import java.awt.Toolkit
-import java.awt.WaitDispatchSupport
+import java.awt.*
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.nio.file.Path
+import java.util.List
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 
 class MainController implements API {
     SwingBuilder swing
@@ -349,11 +324,70 @@ class MainController implements API {
 
     // --- Operations --- //
     void openFiles(List<File> files) {
+
+        println "openFiles"
+        for(File f : files) {
+            println f.name
+        }
+
         def errors = []
 
         for (def file : files) {
             // Check input file
             if (file.exists()) {
+
+
+                String name = file.name
+                int lastDot = name.lastIndexOf('.')
+                String extension = name.substring(lastDot+1)
+
+                String subDirName = null;
+                if(extension.equals("apk")) {
+                    try {
+                        subDirName = file.absolutePath
+                        subDirName = subDirName.substring(0, subDirName.length()-4)
+                        File subDir = new File(subDirName)
+                        subDir.mkdir()
+                        ZipInputStream zis = new ZipInputStream(new FileInputStream(file));
+                        ZipEntry ze = null;
+                        while ((ze = zis.nextEntry) != null) {
+                            String filePath = subDir.absolutePath + File.separator + ze.name
+                            int lastPathSeparator = filePath.lastIndexOf(File.separator)
+                            String dirPath = filePath.substring(0, lastPathSeparator)
+                            File fileObj = new File(filePath)
+                            File dirObj = new File(dirPath)
+                            if(! dirObj.exists()) {
+                                dirObj.mkdirs()
+                            }
+                            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
+                            byte[] bytesIn = new byte[2048];
+                            int read = 0;
+                            while ((read = zis.read(bytesIn)) != -1) {
+                                bos.write(bytesIn, 0, read);
+                            }
+                            bos.close();
+                        }
+                        zis.close()
+
+                        String dexPath = subDirName + File.separator + "classes.dex"
+                        String jarPath = subDirName + File.separator + "classes.jar"
+                        if(new File(dexPath).exists()){
+                            Dex2jarCmd.main(dexPath, "-o", jarPath)
+                            File jarFile = new File(jarPath)
+                            if(jarFile.exists()){
+                                List<File> fs = new ArrayList<File>()
+                                fs.add(jarFile)
+                                openFiles(fs)
+                                return
+                            }
+                        }
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace()
+                    }
+                }
+
                 FileLoader loader = getFileLoader(file)
                 if (! loader?.accept(this, file)) {
                     errors << "Invalid input fileloader: '$file.absolutePath'"

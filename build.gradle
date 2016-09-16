@@ -6,6 +6,7 @@ buildscript {
     dependencies {
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.6'
         classpath 'org.spockframework:spock-core:1.0-groovy-2.3'
+        //classpath 'com.googlecode.d2j:dex-tools:2.0'
     }
 }
 
@@ -30,6 +31,9 @@ allprojects {
     }
 
     repositories {
+        maven {
+            url "http://repository-dex2jar.forge.cloudbees.com/release/"
+        }
         mavenCentral()
         maven {
             url 'https://raw.github.com/java-decompiler/mvn-repo/master'
