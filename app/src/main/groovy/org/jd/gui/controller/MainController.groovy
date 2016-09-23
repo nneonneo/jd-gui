@@ -171,6 +171,7 @@ class MainController implements API {
 	// --- Actions --- //
 	void onOpen() {
 		mainView.createOpenFileChooser().with {
+            println "onOpen"
             addFileFilters(FileLoaderService.instance.mapProviders)
 			currentDirectory = configuration.configRecentLoadDirectory
 			show({ openFiles([ selectedFile ]) })
@@ -335,8 +336,6 @@ class MainController implements API {
         for (def file : files) {
             // Check input file
             if (file.exists()) {
-
-
                 String name = file.name
                 int lastDot = name.lastIndexOf('.')
                 String extension = name.substring(lastDot+1)
@@ -344,6 +343,12 @@ class MainController implements API {
                 String subDirName = null;
                 if(extension.equals("apk")) {
                     try {
+                        String SEPARATOR = null;
+                        if(File.separator.equals("/")) {
+                            SEPARATOR = "/";
+                        } else {
+                            SEPARATOR = "\\\\";
+                        }
                         subDirName = file.absolutePath
                         subDirName = subDirName.substring(0, subDirName.length()-4)
                         File subDir = new File(subDirName)
@@ -351,7 +356,7 @@ class MainController implements API {
                         ZipInputStream zis = new ZipInputStream(new FileInputStream(file));
                         ZipEntry ze = null;
                         while ((ze = zis.nextEntry) != null) {
-                            String filePath = subDir.absolutePath + File.separator + ze.name
+                            String filePath = subDir.absolutePath + File.separator + ze.name.replaceAll("/", SEPARATOR)
                             int lastPathSeparator = filePath.lastIndexOf(File.separator)
                             String dirPath = filePath.substring(0, lastPathSeparator)
                             File fileObj = new File(filePath)
@@ -359,6 +364,7 @@ class MainController implements API {
                             if(! dirObj.exists()) {
                                 dirObj.mkdirs()
                             }
+                            new File(filePath).createNewFile()
                             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
                             byte[] bytesIn = new byte[2048];
                             int read = 0;
@@ -368,7 +374,6 @@ class MainController implements API {
                             bos.close();
                         }
                         zis.close()
-
                         String dexPath = subDirName + File.separator + "classes.dex"
                         String jarPath = subDirName + File.separator + "classes.jar"
                         if(new File(dexPath).exists()){
@@ -381,8 +386,6 @@ class MainController implements API {
                                 return
                             }
                         }
-
-
                     } catch (Exception e) {
                         e.printStackTrace()
                     }
