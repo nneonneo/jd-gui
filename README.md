@@ -1,3 +1,14 @@
+
+在原 jd-gui 基础上，增加直接处理 apk 文件的功能，即把 apkName.apk 文件拖到 jd-gui 窗口中，就能在 apkName.apk 所在目录解压到 apkName 目录，并调用 dex2jar 的代码得到 classes.jar 文件， 然后把 classes.jar 传给 jd-gui 处理。
+
+[下载可执行文件]()
+
+注意：
+1. 只支持拖拽 .apk 文件，不支持在文件选择器里面选择 .apk 文件。
+2. jd-gui 有一个问题，用它打开一个 .jar 文件，然后修改该 .jar 文件，在不重启 jd-gui 的情况下再次打开该 .jar 文件，此文件的变化不会在 jd-gui 中体现，所以我常常要重启 jd-gui 来查看 apk 文件的代码变化。
+
+........................... 以下是 jd-gui 原来的的 README 内容 .............................
+
 #JD-GUI
 
 JD-GUI, a standalone graphical utility that displays Java sources from CLASS files.
