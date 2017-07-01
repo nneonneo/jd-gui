@@ -1,15 +1,4 @@
-
-在原 jd-gui 基础上，增加直接处理 apk 文件的功能，即把 apkName.apk 文件拖到 jd-gui 窗口中，就能在 apkName.apk 所在目录解压到 apkName 目录，并调用 dex2jar 的代码得到 classes.jar 文件， 然后把 classes.jar 传给 jd-gui 处理。
-
-[下载可执行文件]()
-
-注意：
-1. 只支持拖拽 .apk 文件，不支持在文件选择器里面选择 .apk 文件。
-2. jd-gui 有一个问题，用它打开一个 .jar 文件，然后修改该 .jar 文件，在不重启 jd-gui 的情况下再次打开该 .jar 文件，此文件的变化不会在 jd-gui 中体现，所以我常常要重启 jd-gui 来查看 apk 文件的代码变化。
-
-........................... 以下是 jd-gui 原来的的 README 内容 .............................
-
-#JD-GUI
+# JD-GUI
 
 JD-GUI, a standalone graphical utility that displays Java sources from CLASS files.
 
@@ -19,12 +8,12 @@ JD-GUI, a standalone graphical utility that displays Java sources from CLASS fil
 - Java Decompiler Wikipedia page: [http://en.wikipedia.org/wiki/Java_Decompiler](http://en.wikipedia.org/wiki/Java_Decompiler)
 - JD-GUI source code: [https://github.com/java-decompiler/jd-gui](https://github.com/java-decompiler/jd-gui)
 
-##Description
+## Description
 JD-GUI is a standalone graphical utility that displays Java source codes of 
 ".class" files. You can browse the reconstructed source code with the JD-GUI
 for instant access to methods and fields.
 
-##How to build JD-GUI ?
+## How to build JD-GUI ?
 ```
 > ./gradlew build 
 ```
@@ -48,18 +37,18 @@ generate Ubuntu/Debian installer
 ```
 generate RedHat/CentOS/Fedora installer
 
-##How to launch JD-GUI ?
+## How to launch JD-GUI ?
 - Double-click on _"jd-gui-x.y.z.jar"_
 - Double-click on _"JD-GUI"_ application from Mac OSX
 - Double-click on _"jd-gui.exe"_ application from Windows
 - Execute _"java -jar jd-gui-x.y.z.jar"_ or _"java -classpath jd-gui-x.y.z.jar org.jd.gui.App"_
 
-##How to use JD-GUI ?
+## How to use JD-GUI ?
 - Open a file with menu "File > Open File..."
 - Open recent files with menu "File > Recent Files"
 - Drag and drop files from your file explorer
 
-##How to extend JD-GUI ?
+## How to extend JD-GUI ?
 ```
 > ./gradlew idea 
 ```
@@ -73,7 +62,17 @@ generate Eclipse project
 ```
 launch JD-GUI with your extensions
 
-##How to uninstall JD-GUI ?
+## How to uninstall JD-GUI ?
 - Java: Delete "jd-gui-x.y.z.jar" and "jd-gui.cfg".
 - Mac OSX: Drag and drop "JD-GUI" application into the trash.
 - Windows: Delete "jd-gui.exe" and "jd-gui.cfg".
+
+## Android support
+
+This version of JD-GUI supports Android APK files and Android .aar library packages. Simply open those files as usual to decompile.
+
+For APK files, it will unpack the contents of the APK to the APK's folder, and convert the `classes.dex` file to `classes.jar` using an internal version of `dex2jar`.
+
+Notes:
+1. Currently, only drag-and-drop support is provided for APKs - they cannot be opened using the Open File dialog.
+2. There's a slight problem with JD-GUI - if you modify a .jar, then open that .jar again without restarting JD-GUI, the changes may not be reflected. Therefore, I find it necessary to restart JD-GUI in order to see changes made to APKs.
